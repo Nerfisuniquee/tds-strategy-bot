@@ -62,7 +62,6 @@ async def on_ready():
     link="Google Docs link to the strategy",
     notes="Optional: Important notes for this strategy",
     dps_options="Optional: DPS priorities (e.g., Accelerator — Pursuit — Engineer)",
-    player_list="Optional: Specific players needed (e.g., Player1, Player2)",
     image_urls="Optional: Image URLs separated by commas (e.g., url1, url2, url3)"
 )
 @app_commands.choices(map_name=MAP_CHOICES, players=PLAYER_CHOICES)
@@ -74,7 +73,6 @@ async def add_strategy(
     link: str,
     notes: str = None,
     dps_options: str = None,
-    player_list: str = None,
     image_urls: str = None
 ):
     map_value = map_name.value
@@ -100,7 +98,6 @@ async def add_strategy(
         'link': link,
         'notes': notes,
         'dps_options': dps_options,
-        'player_list': player_list,
         'images': images,
         'added_by': str(interaction.user)
     })
@@ -118,8 +115,6 @@ async def add_strategy(
         embed.add_field(name="📝 Notes", value=notes, inline=False)
     if dps_options:
         embed.add_field(name="🎯 DPS Options", value=dps_options, inline=False)
-    if player_list:
-        embed.add_field(name="👥 Players", value=player_list, inline=False)
     if images:
         embed.add_field(name="🖼️ Images", value=f"{len(images)} image(s) added", inline=False)
         embed.set_image(url=images[0])  # Show first image as preview
@@ -159,18 +154,9 @@ async def get_strategy(
     )
     
     for strat in strats:
-        field_value = f"**Link:** {strat['link']}\n"
-        
-        if strat.get('notes'):
-            field_value += f"📝 **Notes:** {strat['notes']}\n"
-        if strat.get('dps_options'):
-            field_value += f"🎯 **DPS:** {strat['dps_options']}\n"
-        if strat.get('player_list'):
-            field_value += f"👥 **Players:** {strat['player_list']}\n"
-        
         embed.add_field(
             name=f"Strat {strat['id']}: {strat['name']}",
-            value=field_value,
+            value=strat['link'],
             inline=False
         )
     
@@ -293,8 +279,6 @@ async def view_strategy(
         embed.add_field(name="📝 Notes", value=strat['notes'], inline=False)
     if strat.get('dps_options'):
         embed.add_field(name="🎯 DPS Options", value=strat['dps_options'], inline=False)
-    if strat.get('player_list'):
-        embed.add_field(name="👥 Players", value=strat['player_list'], inline=False)
     
     embed.set_footer(text=f"Added by {strat['added_by']}")
     
@@ -324,4 +308,23 @@ if __name__ == '__main__':
         print("Available env vars:", list(os.environ.keys()))
         exit(1)
     print("Token found! Starting bot...")
-    bot.run(TOKEN)
+    
+    # Retry logic for rate limits
+    import time
+    max_retries = 5
+    retry_delay = 60  # Start with 60 seconds
+    
+    for attempt in range(max_retries):
+        try:
+            bot.run(TOKEN)
+            break  # If successful, exit the loop
+        except discord.errors.HTTPException as e:
+            if e.status == 429:  # Rate limit error
+                print(f"Rate limited! Waiting {retry_delay} seconds before retry {attempt + 1}/{max_retries}...")
+                time.sleep(retry_delay)
+                retry_delay *= 2  # Exponential backoff
+            else:
+                raise  # Re-raise other HTTP errors
+        except Exception as e:
+            print(f"Unexpected error: {e}")
+            raise
