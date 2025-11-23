@@ -14,7 +14,7 @@ STRATS_FILE = 'strategies.json'
 
 # PERMISSION SETTINGS - CHANGE THESE
 ALLOWED_USER_ID = 748100466579210251  # Replace with your Discord User ID
-ALLOWED_ROLE_NAMES = ["Creator", "Activity Helper", "Tester", "Carry Manager"]  # Role names that can edit strats
+ALLOWED_ROLE_NAMES = ["Creator", "Activity Helper", "Tester", "Carry Manager", "Moderator"]  # Role names that can edit strats
 
 # Permission check function
 def can_edit_strats(interaction: discord.Interaction) -> bool:
