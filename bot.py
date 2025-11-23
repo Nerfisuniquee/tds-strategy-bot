@@ -23,7 +23,7 @@ MAP_CHOICES = [
     app_commands.Choice(name="Missions", value="Missions"),
     app_commands.Choice(name="Hardcore", value="Hardcore"),
     app_commands.Choice(name="Hardcore Missions", value="Hardcore Missions"),
-    app_commands.Choice(name="Hidden Wave", value="Hidden Wave")
+    app_commands.Choice(name="Hidden Wave", value="Hidden Wave"),
 ]
 
 # Predefined choices for player modes
