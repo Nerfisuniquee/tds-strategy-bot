@@ -12,6 +12,24 @@ bot = commands.Bot(command_prefix='!', intents=intents)
 
 STRATS_FILE = 'strategies.json'
 
+# PERMISSION SETTINGS - CHANGE THESE
+ALLOWED_USER_ID = 748100466579210251  # Replace with your Discord User ID
+ALLOWED_ROLE_NAMES = ["Admin", "Moderator", "Helper"]  # Role names that can edit strats
+
+# Permission check function
+def can_edit_strats(interaction: discord.Interaction) -> bool:
+    # Check if user is the specific allowed user
+    if interaction.user.id == ALLOWED_USER_ID:
+        return True
+    
+    # Check if user has any of the allowed roles
+    if interaction.guild:  # Make sure it's in a server
+        user_roles = [role.name for role in interaction.user.roles]
+        if any(role in ALLOWED_ROLE_NAMES for role in user_roles):
+            return True
+    
+    return False
+
 # Predefined choices for maps
 MAP_CHOICES = [
     app_commands.Choice(name="Polluted Wastelands 2", value="Polluted Wastelands 2"),
@@ -75,6 +93,14 @@ async def add_strategy(
     dps_options: str = None,
     image_urls: str = None
 ):
+    # Permission check
+    if not can_edit_strats(interaction):
+        await interaction.response.send_message(
+            "❌ You don't have permission to add strategies!",
+            ephemeral=True
+        )
+        return
+    
     map_value = map_name.value
     player_value = players.value
     key = f"{map_value}_{player_value}".lower().replace(" ", "_")
@@ -175,6 +201,14 @@ async def remove_strategy(
     players: app_commands.Choice[str],
     strat_id: int
 ):
+    # Permission check
+    if not can_edit_strats(interaction):
+        await interaction.response.send_message(
+            "❌ You don't have permission to remove strategies!",
+            ephemeral=True
+        )
+        return
+    
     map_value = map_name.value
     player_value = players.value
     key = f"{map_value}_{player_value}".lower().replace(" ", "_")
