@@ -354,18 +354,18 @@ async def view_strategy(
     if not images and strat.get('loadout_image'):
         images = [strat['loadout_image']]
     
-    if images:
-        # Set first image in the main embed
-        embed.set_image(url=images[0])
-        await interaction.response.send_message(embed=embed)
-        
-        # Send additional images as separate embeds
-            for img_url in images[1:]:
-                img_embed = discord.Embed(color=discord.Color.gold())
-                img_embed.set_image(url=img_url)
-                await interaction.followup.send(embed=img_embed)
-    else:
-        await interaction.response.send_message(embed=embed)
+if images:
+    # Set first image in the main embed
+    embed.set_image(url=images[0])
+    await interaction.response.send_message(embed=embed)
+    
+    # Send additional images as separate embeds
+    for img_url in images[1:]:
+        img_embed = discord.Embed(color=discord.Color.gold())
+        img_embed.set_image(url=img_url)
+        await interaction.followup.send(embed=img_embed)
+else:
+    await interaction.response.send_message(embed=embed)
 
 # Run the bot
 if __name__ == '__main__':
