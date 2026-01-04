@@ -1,17 +1,1 @@
-{
-  "hardcore_trio": {
-    "map": "Hardcore",
-    "players": "Trio",
-    "strats": [
-      {
-        "id": 1,
-        "name": "Swift Siege",
-        "link": "https://docs.google.com/document/d/1Z_R085rx4bjX42q1e3h2QiJv9DiUynrSL5vibn7bWqw/edit?tab=t.sfxbztqbamlr",
-        "notes": null,
-        "dps_options": null,
-        "images": [],
-        "added_by": "nerfisunique"
-      }
-    ]
-  }
-}
+{}
