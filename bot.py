@@ -3,14 +3,14 @@ from discord import app_commands
 from discord.ext import commands
 import json
 import os
+import requests
+import base64
 from typing import List
 
 # Bot setup
 intents = discord.Intents.default()
 intents.message_content = True
 bot = commands.Bot(command_prefix='!', intents=intents)
-
-STRATS_FILE = 'strategies.json'
 
 # PERMISSION SETTINGS - CHANGE THESE
 ALLOWED_USER_ID = 748100466579210251  # Replace with your Discord User ID
@@ -52,18 +52,51 @@ PLAYER_CHOICES = [
     app_commands.Choice(name="Quad", value="Quad"),
 ]
 
-# Load strategies from file
+# ---------------------------
+# GitHub-backed storage (replaces local STRATS_FILE)
+# ---------------------------
+GITHUB_API = "https://api.github.com"
+github_sha = None
+
 def load_strategies():
-    if os.path.exists(STRATS_FILE):
-        with open(STRATS_FILE, 'r') as f:
-            return json.load(f)
-    return {}
+    global github_sha
+    try:
+        url = f"{GITHUB_API}/repos/{os.environ['GITHUB_REPO']}/contents/{os.environ['GITHUB_FILE']}"
+        headers = {
+            "Authorization": f"Bearer {os.environ['GITHUB_TOKEN']}",
+            "Accept": "application/vnd.github+json"
+        }
+        r = requests.get(url, headers=headers)
+        r.raise_for_status()
+        data = r.json()
+        github_sha = data.get("sha")
+        content = base64.b64decode(data["content"]).decode("utf-8")
+        return json.loads(content)
+    except Exception as e:
+        print("Failed to load strategies from GitHub:", e)
+        return {}
 
-# Save strategies to file
 def save_strategies(strategies):
-    with open(STRATS_FILE, 'w') as f:
-        json.dump(strategies, f, indent=2)
+    global github_sha
+    try:
+        url = f"{GITHUB_API}/repos/{os.environ['GITHUB_REPO']}/contents/{os.environ['GITHUB_FILE']}"
+        headers = {
+            "Authorization": f"Bearer {os.environ['GITHUB_TOKEN']}",
+            "Accept": "application/vnd.github+json"
+        }
+        encoded = base64.b64encode(json.dumps(strategies, indent=2).encode("utf-8")).decode("utf-8")
+        payload = {
+            "message": "Update strategies",
+            "content": encoded,
+            "sha": github_sha
+        }
+        r = requests.put(url, headers=headers, json=payload)
+        r.raise_for_status()
+        github_sha = r.json()["content"]["sha"]
+    except Exception as e:
+        print("Failed to save strategies to GitHub:", e)
 
+# Load strategies from GitHub on startup
 strategies = load_strategies()
 
 @bot.event
@@ -327,10 +360,10 @@ async def view_strategy(
         await interaction.response.send_message(embed=embed)
         
         # Send additional images as separate embeds
-        for img_url in images[1:]:
-            img_embed = discord.Embed(color=discord.Color.gold())
-            img_embed.set_image(url=img_url)
-            await interaction.followup.send(embed=img_embed)
+            for img_url in images[1:]:
+                img_embed = discord.Embed(color=discord.Color.gold())
+                img_embed.set_image(url=img_url)
+                await interaction.followup.send(embed=img_embed)
     else:
         await interaction.response.send_message(embed=embed)
 
